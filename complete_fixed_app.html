@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Message Encryptor - Fixed</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #2196f3;
+            --error-color: #f44336;
+            --success-color: #4caf50;
+            --background-color: #f5f5f5;
+            --text-color: #333;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--background-color);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 1rem;
+            color: var(--primary-color);
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+        }
+
+        .input-group, .output-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .password-group {
+            margin-bottom: 2rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        input[type="password"], input[type="text"], textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+            resize: vertical;
+        }
+
+        textarea {
+            min-height: 100px;
+            font-family: monospace;
+        }
+
+        .password-input-wrapper {
+            position: relative;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #666;
+            padding: 5px;
+        }
+
+        .toggle-password:hover {
+            color: var(--primary-color);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 0.75rem;
+            border: none;
+            background: #eee;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 1rem;
+            transition: background-color 0.3s;
+        }
+
+        .tab-btn.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .action-btn {
+            display: block;
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-bottom: 1rem;
+        }
+
+        .action-btn:hover {
+            background: #1976d2;
+        }
+
+        .action-btn.secondary {
+            background: #666;
+            margin-bottom: 0.5rem;
+        }
+
+        .action-btn.secondary:hover {
+            background: #555;
+        }
+
+        .output-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .output-actions .action-btn {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        .char-count {
+            text-align: right;
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 0.25rem;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: var(--error-color);
+            padding: 1rem;
+            border-radius: 4px;
+            margin-top: 1rem;
+            text-align: center;
+            display: none;
+        }
+
+        .error.show {
+            display: block;
+        }
+
+        .security-note {
+            text-align: center;
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 2rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+
+        .tooltip {
+            display: inline-block;
+            margin-left: 5px;
+            width: 16px;
+            height: 16px;
+            background: #ccc;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            font-size: 12px;
+            cursor: help;
+        }
+
+        .debug-info {
+            background: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.8rem;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            
+            .container {
+                padding: 1rem;
+            }
+
+            .output-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-lock"></i> Secure Message Encryptor</h1>
+            <p class="subtitle">End-to-end encryption for your messages - Python Compatible</p>
+        </header>
+        
+        <div class="input-group password-group">
+            <label for="password">
+                <i class="fas fa-key"></i> Password
+                <span class="tooltip" title="Use a strong password to protect your message">?</span>
+            </label>
+            <div class="password-input-wrapper">
+                <input type="password" id="password" placeholder="Enter your password">
+                <button type="button" class="toggle-password" aria-label="Toggle password visibility">
+                    <i class="fas fa-eye"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="encrypt">
+                <i class="fas fa-lock"></i> Encrypt
+            </button>
+            <button class="tab-btn" data-tab="decrypt">
+                <i class="fas fa-unlock"></i> Decrypt
+            </button>
+        </div>
+
+        <div class="tab-content active" id="encrypt">
+            <div class="input-group">
+                <label for="plaintext">
+                    <i class="fas fa-pen"></i> Message to Encrypt
+                </label>
+                <textarea id="plaintext" placeholder="Enter your message here..."></textarea>
+                <div class="char-count">
+                    <span id="plaintext-count">0</span> characters
+                </div>
+            </div>
+            <button id="encryptBtn" class="action-btn">
+                <i class="fas fa-lock"></i> Encrypt Message
+            </button>
+        </div>
+
+        <div class="tab-content" id="decrypt">
+            <div class="input-group">
+                <label for="ciphertext">
+                    <i class="fas fa-file-alt"></i> Encrypted Message
+                </label>
+                <textarea id="ciphertext" placeholder="Paste encrypted message here..."></textarea>
+            </div>
+            <button id="decryptBtn" class="action-btn">
+                <i class="fas fa-unlock"></i> Decrypt Message
+            </button>
+        </div>
+
+        <div class="output-group">
+            <label for="output">
+                <i class="fas fa-clipboard"></i> Result
+            </label>
+            <textarea id="output" readonly></textarea>
+            <div class="output-actions">
+                <button id="copyBtn" class="action-btn secondary">
+                    <i class="fas fa-copy"></i> Copy to Clipboard
+                </button>
+                <button id="clearBtn" class="action-btn secondary">
+                    <i class="fas fa-trash"></i> Clear
+                </button>
+            </div>
+        </div>
+
+        <div id="error" class="error">
+            <i class="fas fa-exclamation-circle"></i>
+            <span class="error-message"></span>
+        </div>
+
+        <div id="debug" class="debug-info" style="display: none;">
+            <strong>Debug Info:</strong><br>
+            <span id="debug-content"></span>
+        </div>
+
+        <footer>
+            <p class="security-note">
+                <i class="fas fa-shield-alt"></i>
+                All encryption is done locally in your browser. Your messages are never sent to any server.<br>
+                <strong>Format:</strong> Compatible with Python AES-256-GCM implementation [salt|iv|tag|ciphertext]
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        /* ==========================  UI HOOK‑UPS  ========================== */
+        const $ = (sel) => document.querySelector(sel);
+
+        const passwordInput   = $('#password');
+        const plaintextInput  = $('#plaintext');
+        const ciphertextInput = $('#ciphertext');
+        const outputTextarea  = $('#output');
+
+        const encryptBtn = $('#encryptBtn');
+        const decryptBtn = $('#decryptBtn');
+        const copyBtn    = $('#copyBtn');
+        const clearBtn   = $('#clearBtn');
+
+        const errorDiv      = $('#error');
+        const errorMessage  = errorDiv?.querySelector('.error-message');
+        const debugDiv      = $('#debug');
+        const debugContent  = $('#debug-content');
+
+        const tabBtns     = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+        const togglePasswordBtn = document.querySelector('.toggle-password');
+
+        /* ==========================  CONSTANTS  ========================== */
+        const PBKDF2_ITERATIONS = 100_000;
+        const SALT_LENGTH = 16;   // bytes
+        const IV_LENGTH   = 12;   // bytes (96‑bit recommended for AES‑GCM)
+        const TAG_LENGTH  = 16;   // bytes (128‑bit tag)
+        const KEY_LENGTH  = 32;   // bytes (256‑bit AES key)
+
+        /* ==========================  HELPERS  ========================== */
+        const stringToBuffer = (str) => new TextEncoder().encode(str);
+        const bufferToString = (buf) => new TextDecoder().decode(buf);
+
+        const bufferToBase64 = (buf) =>
+            btoa(String.fromCharCode(...new Uint8Array(buf)));
+
+        const base64ToUint8Array = (b64) => {
+            // strip all whitespace/newlines the user may have copy‑pasted
+            b64 = b64.replace(/\s+/g, '');
+            const binary = atob(b64);
+            const out = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i++) out[i] = binary.charCodeAt(i);
+            return out;
+        };
+
+        async function deriveKey(password, salt) {
+            const keyMaterial = await crypto.subtle.importKey(
+                'raw',
+                stringToBuffer(password),
+                'PBKDF2',
+                false,
+                ['deriveBits', 'deriveKey']
+            );
+
+            return crypto.subtle.deriveKey(
+                { name: 'PBKDF2', salt, iterations: PBKDF2_ITERATIONS, hash: 'SHA-256' },
+                keyMaterial,
+                { name: 'AES-GCM', length: 256 },
+                false,
+                ['encrypt', 'decrypt']
+            );
+        }
+
+        function bytesToHex(bytes) {
+            return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join(' ');
+        }
+
+        function showDebug(message) {
+            debugContent.innerHTML = message;
+            debugDiv.style.display = 'block';
+        }
+
+        /* ==========================  CRYPTO CORE - FIXED  ========================== */
+        async function encrypt(plaintext, password) {
+            try {
+                const salt = crypto.getRandomValues(new Uint8Array(SALT_LENGTH));
+                const iv   = crypto.getRandomValues(new Uint8Array(IV_LENGTH));
+                const key  = await deriveKey(password, salt);
+
+                const encryptedData = await crypto.subtle.encrypt(
+                    { name: 'AES-GCM', iv, tagLength: TAG_LENGTH * 8 },
+                    key,
+                    stringToBuffer(plaintext)
+                );
+
+                const encryptedArray = new Uint8Array(encryptedData);
+                
+                // AES-GCM returns [ciphertext + tag], we need to split them
+                const ciphertext = encryptedArray.slice(0, encryptedArray.length - TAG_LENGTH);
+                const tag = encryptedArray.slice(encryptedArray.length - TAG_LENGTH);
+
+                /* FORMAT: [ salt | iv | tag | ciphertext ]
+                   This format is compatible with the Python implementation
+                */
+                const result = new Uint8Array(SALT_LENGTH + IV_LENGTH + TAG_LENGTH + ciphertext.length);
+                let offset = 0;
+                result.set(salt, offset);           offset += SALT_LENGTH;
+                result.set(iv, offset);             offset += IV_LENGTH;
+                result.set(tag, offset);            offset += TAG_LENGTH;
+                result.set(ciphertext, offset);
+
+                // Debug info
+                showDebug(`
+                    Encryption Debug:<br>
+                    Salt (${SALT_LENGTH}): ${bytesToHex(salt)}<br>
+                    IV (${IV_LENGTH}): ${bytesToHex(iv)}<br>
+                    Tag (${TAG_LENGTH}): ${bytesToHex(tag)}<br>
+                    Ciphertext (${ciphertext.length}): ${bytesToHex(ciphertext)}<br>
+                    Total length: ${result.length} bytes
+                `);
+
+                return bufferToBase64(result);
+            } catch (err) {
+                throw new Error('Encryption failed: ' + err.message);
+            }
+        }
+
+        async function decrypt(encoded, password) {
+            try {
+                const data = base64ToUint8Array(encoded);
+                if (data.length < SALT_LENGTH + IV_LENGTH + TAG_LENGTH + 1) {
+                    throw new Error('Ciphertext too short');
+                }
+
+                // Parse the format: [ salt | iv | tag | ciphertext ]
+                let offset = 0;
+                const salt = data.slice(offset, offset + SALT_LENGTH);
+                offset += SALT_LENGTH;
+                const iv = data.slice(offset, offset + IV_LENGTH);
+                offset += IV_LENGTH;
+                const tag = data.slice(offset, offset + TAG_LENGTH);
+                offset += TAG_LENGTH;
+                const ciphertext = data.slice(offset);
+
+                const key = await deriveKey(password, salt);
+
+                // Reconstruct the format expected by Web Crypto API: [ciphertext + tag]
+                const encryptedData = new Uint8Array(ciphertext.length + tag.length);
+                encryptedData.set(ciphertext, 0);
+                encryptedData.set(tag, ciphertext.length);
+
+                // Debug info
+                showDebug(`
+                    Decryption Debug:<br>
+                    Input length: ${data.length} bytes<br>
+                    Salt (${SALT_LENGTH}): ${bytesToHex(salt)}<br>
+                    IV (${IV_LENGTH}): ${bytesToHex(iv)}<br>
+                    Tag (${TAG_LENGTH}): ${bytesToHex(tag)}<br>
+                    Ciphertext (${ciphertext.length}): ${bytesToHex(ciphertext)}<br>
+                    Reconstructed for API: ${encryptedData.length} bytes
+                `);
+
+                const decryptedData = await crypto.subtle.decrypt(
+                    { name: 'AES-GCM', iv, tagLength: TAG_LENGTH * 8 },
+                    key,
+                    encryptedData
+                );
+
+                return bufferToString(decryptedData);
+            } catch (err) {
+                throw new Error('Decryption failed: ' + err.message);
+            }
+        }
+
+        /* ==========================  UI LOGIC  ========================== */
+
+        // Tab switching
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                tabBtns.forEach(b => b.classList.toggle('active', b === btn));
+                tabContents.forEach(tc => tc.classList.toggle('active', tc.id === btn.dataset.tab));
+                clearError();
+            });
+        });
+
+        // Toggle password visibility
+        togglePasswordBtn.addEventListener('click', () => {
+            const showing = passwordInput.type === 'text';
+            passwordInput.type = showing ? 'password' : 'text';
+            togglePasswordBtn.innerHTML = `<i class="fas fa-eye${showing ? '' : '-slash'}"></i>`;
+        });
+
+        // Character counter for plaintext
+        plaintextInput.addEventListener('input', (e) => {
+            $('#plaintext-count').textContent = e.target.value.length;
+        });
+
+        /* ----------  Core actions ---------- */
+        encryptBtn.addEventListener('click', async () => {
+            const pw = passwordInput.value;
+            const msg = plaintextInput.value;
+            if (!pw || !msg) return showError('Please enter both password and plaintext message');
+
+            try {
+                encryptBtn.disabled = true;
+                encryptBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Encrypting...';
+                
+                outputTextarea.value = await encrypt(msg, pw);
+                clearError();
+                
+                // Show success message
+                setTimeout(() => {
+                    showError('✅ Message encrypted successfully! Copy the result to share.', 'success');
+                }, 100);
+            } catch (err) {
+                showError(err.message);
+            } finally {
+                encryptBtn.disabled = false;
+                encryptBtn.innerHTML = '<i class="fas fa-lock"></i> Encrypt Message';
+            }
+        });
+
+        decryptBtn.addEventListener('click', async () => {
+            const pw = passwordInput.value;
+            const ct = ciphertextInput.value;
+            if (!pw || !ct) return showError('Please enter both password and encrypted message');
+
+            try {
+                decryptBtn.disabled = true;
+                decryptBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Decrypting...';
+                
+                outputTextarea.value = await decrypt(ct, pw);
+                clearError();
+                
+                // Show success message
+                setTimeout(() => {
+                    showError('✅ Message decrypted successfully!', 'success');
+                }, 100);
+            } catch (err) {
+                showError(err.message);
+            } finally {
+                decryptBtn.disabled = false;
+                decryptBtn.innerHTML = '<i class="fas fa-unlock"></i> Decrypt Message';
+            }
+        });
+
+        copyBtn.addEventListener('click', () => {
+            if (!outputTextarea.value) {
+                showError('Nothing to copy!');
+                return;
+            }
+            
+            navigator.clipboard.writeText(outputTextarea.value)
+                .then(() => {
+                    copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                    setTimeout(() => {
+                        copyBtn.innerHTML = '<i class="fas fa-copy"></i> Copy to Clipboard';
+                    }, 2000);
+                })
+                .catch((err) => showError('Copy failed: ' + err.message));
+        });
+
+        clearBtn.addEventListener('click', () => {
+            [plaintextInput, ciphertextInput, outputTextarea].forEach(el => el.value = '');
+            $('#plaintext-count').textContent = '0';
+            clearError();
+            debugDiv.style.display = 'none';
+        });
+
+        /* ----------  UX helpers ---------- */
+        function showError(msg, type = 'error') {
+            if (!errorDiv) return;
+            errorMessage.textContent = msg;
+            errorDiv.className = type === 'success' ? 'error show' : 'error show';
+            errorDiv.style.background = type === 'success' ? '#d4edda' : '#f8d7da';
+            errorDiv.style.color = type === 'success' ? '#155724' : '#721c24';
+            
+            if (type === 'success') {
+                setTimeout(clearError, 3000);
+            }
+        }
+
+        function clearError() {
+            errorDiv?.classList.remove('show');
+        }
+
+        // Add some sample data for testing
+        window.addEventListener('load', () => {
+            // Auto-fill with test data for easier testing
+            if (location.search.includes('test')) {
+                passwordInput.value = 'test123';
+                plaintextInput.value = 'Hello, this is a test message for Python compatibility!';
+                $('#plaintext-count').textContent = plaintextInput.value.length;
+            }
+        });
+    </script>
+</body>
+</html>
